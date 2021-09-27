@@ -10,6 +10,8 @@
 		3A6921A126F9B5AF0030B19A /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 3A6921A026F9B5AF0030B19A /* main.c */; };
 		3A6921A926F9B6310030B19A /* module.c in Sources */ = {isa = PBXBuildFile; fileRef = 3A6921A826F9B6310030B19A /* module.c */; };
 		3A6921AC26F9B7A80030B19A /* utils.c in Sources */ = {isa = PBXBuildFile; fileRef = 3A6921AB26F9B7A80030B19A /* utils.c */; };
+		3A6921B2270218370030B19A /* interpreter.c in Sources */ = {isa = PBXBuildFile; fileRef = 3A6921B1270218370030B19A /* interpreter.c */; };
+		3A6921B5270218930030B19A /* libreadline.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A6921B4270218870030B19A /* libreadline.tbd */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -31,6 +33,10 @@
 		3A6921A826F9B6310030B19A /* module.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = module.c; sourceTree = "<group>"; };
 		3A6921AA26F9B7A80030B19A /* utils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = utils.h; sourceTree = "<group>"; };
 		3A6921AB26F9B7A80030B19A /* utils.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = utils.c; sourceTree = "<group>"; };
+		3A6921AD270217FD0030B19A /* opcode.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = opcode.h; sourceTree = "<group>"; };
+		3A6921B0270218370030B19A /* interpreter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = interpreter.h; sourceTree = "<group>"; };
+		3A6921B1270218370030B19A /* interpreter.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = interpreter.c; sourceTree = "<group>"; };
+		3A6921B4270218870030B19A /* libreadline.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libreadline.tbd; path = usr/lib/libreadline.tbd; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -38,6 +44,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3A6921B5270218930030B19A /* libreadline.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -49,6 +56,7 @@
 			children = (
 				3A69219F26F9B5AF0030B19A /* wasm */,
 				3A69219E26F9B5AF0030B19A /* Products */,
+				3A6921B3270218870030B19A /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -66,10 +74,21 @@
 				3A6921A026F9B5AF0030B19A /* main.c */,
 				3A6921A726F9B6310030B19A /* module.h */,
 				3A6921A826F9B6310030B19A /* module.c */,
+				3A6921AD270217FD0030B19A /* opcode.h */,
 				3A6921AA26F9B7A80030B19A /* utils.h */,
 				3A6921AB26F9B7A80030B19A /* utils.c */,
+				3A6921B0270218370030B19A /* interpreter.h */,
+				3A6921B1270218370030B19A /* interpreter.c */,
 			);
 			path = wasm;
+			sourceTree = "<group>";
+		};
+		3A6921B3270218870030B19A /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				3A6921B4270218870030B19A /* libreadline.tbd */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -131,6 +150,7 @@
 			files = (
 				3A6921A126F9B5AF0030B19A /* main.c in Sources */,
 				3A6921AC26F9B7A80030B19A /* utils.c in Sources */,
+				3A6921B2270218370030B19A /* interpreter.c in Sources */,
 				3A6921A926F9B6310030B19A /* module.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
