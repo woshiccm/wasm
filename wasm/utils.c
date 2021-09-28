@@ -81,7 +81,7 @@ uint64_t read_LEB_signed(const uint8_t *bytes, uint32_t *pos, uint32_t maxbits) 
 // 注：如果参数 result_len 不为 NULL，则会被赋值为字符串的长度
 char *read_string(const uint8_t *bytes, uint32_t *pos, uint32_t *result_len) {
     // 读取字符串的长度
-    uint32_t str_len = read_LEB_unsigned(bytes, pos, 32);
+    uint32_t str_len = (uint32_t)read_LEB_unsigned(bytes, pos, 32);
     // 为字符串申请内存
     char *str = malloc(str_len + 1);
     // 将字节数组的数据拷贝到字符串 str 中
@@ -402,7 +402,7 @@ void parse_args(Module *m, Type *type, int argc, char **argv) {
         // 按照参数的值类型，设置参数的值
         switch (type->params[i]) {
             case I32:
-                sv->value.uint32 = strtoul(argv[i], NULL, 0);
+                sv->value.uint32 = (uint32_t)strtoul(argv[i], NULL, 0);
                 break;
             case I64:
                 sv->value.uint64 = strtoull(argv[i], NULL, 0);

@@ -68,7 +68,7 @@ typedef struct Block {
 
     char *import_module;// 导入函数的导入模块名（仅针对从外部模块导入的函数）
     char *import_field; // 导入函数的导入成员名（仅针对从外部模块导入的函数）
-    void *(*func_ptr)();// 导入函数的实际值（仅针对从外部模块导入的函数）
+    void *(*func_ptr)(void);// 导入函数的实际值（仅针对从外部模块导入的函数）
 } Block;
 
 // 表结构体

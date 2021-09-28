@@ -38,7 +38,7 @@ void skip_immediate(const uint8_t *bytes, uint32_t *pos) {
             // BrTable 指令的立即数是指定的 n+1 个跳转的目标标签索引（每个索引值占 4 个字节）
             // 其中前 n 个目标标签索引构成一个索引表，最后 1 个标签索引为默认索引
             // 最终跳转到哪一个目标标签索引，需要在运行期间才能决定
-            count = read_LEB_unsigned(bytes, pos, 32);
+            count = (uint32_t)read_LEB_unsigned(bytes, pos, 32);
             for (uint32_t i = 0; i < count; i++) {
                 read_LEB_unsigned(bytes, pos, 32);
             }
@@ -214,15 +214,15 @@ void parse_table_type(Module *m, uint32_t *pos) {
     ASSERT(m->table.elem_type == ANYFUNC, "Table elem_type 0x%x unsupported\n", m->table.elem_type)
 
     // flags 为标记位，如果为 0 表示只需指定表中元素数量下限；为 1 表示既要指定表中元素数量的上限，又指定表中元素数量的下限
-    uint32_t flags = read_LEB_unsigned(m->bytes, pos, 32);
+    uint32_t flags = (uint32_t)read_LEB_unsigned(m->bytes, pos, 32);
     // 先读取表中元素数量下限，同时设置为该表的当前元素数量
-    uint32_t tsize = read_LEB_unsigned(m->bytes, pos, 32);
+    uint32_t tsize = (uint32_t)read_LEB_unsigned(m->bytes, pos, 32);
     m->table.min_size = tsize;
     m->table.cur_size = tsize;
     // flags 为 1 表示既要指定表中元素数量的上限，又指定表中元素数量的下限
     if (flags & 0x1) {
         // 读取表中元素数量的上限
-        tsize = read_LEB_unsigned(m->bytes, pos, 32);
+        tsize = (uint32_t)read_LEB_unsigned(m->bytes, pos, 32);
         // 表的元素数量最大上限为 64K，如果读取的表的元素数量上限值超过 64K，则默认设置 64K，否则设置为读取的值即可
         m->table.max_size = (uint32_t) fmin(0x10000, tsize);
     } else {
@@ -240,16 +240,16 @@ void parse_memory_type(Module *m, uint32_t *pos) {
     // 由于内存段中只会有一块内存，所以无需遍历
 
     // flags 为标记位，如果为 0 表示只指定内存大小的下限；为 1 表示既指定内存大小的上限，又指定内存大小的下限
-    uint32_t flags = read_LEB_unsigned(m->bytes, pos, 32);
+    uint32_t flags = (uint32_t)read_LEB_unsigned(m->bytes, pos, 32);
     // 先读取内存大小的下限，并设置为该内存的初始大小
-    uint32_t pages = read_LEB_unsigned(m->bytes, pos, 32);
+    uint32_t pages = (uint32_t)read_LEB_unsigned(m->bytes, pos, 32);
     m->memory.min_size = pages;
     m->memory.cur_size = pages;
 
     // flags 为 1 表示既指定内存大小上限，又指定内存大小下限
     if (flags & 0x1) {
         // 读取内存大小上限
-        pages = read_LEB_unsigned(m->bytes, pos, 32);
+        pages = (uint32_t)read_LEB_unsigned(m->bytes, pos, 32);
         // 内存大小最大上限为 2GB，如果读取的内存大小上限值超过 2GB，则默认设置 2GB，否则设置为读取的值即可
         m->memory.max_size = (uint32_t) fmin(0x8000, pages);
     } else {
@@ -305,10 +305,10 @@ struct Module *load_module(const uint8_t *bytes, const uint32_t byte_count) {
     // 自定义段、类型段、导入段、函数段、表段、内存段、全局段、导出段、起始段、元素段、代码段、数据段
     while (pos < byte_count) {
         // 每个段的第 1 个字节为该段的 ID，用于标记该段的类型
-        uint32_t id = read_LEB_unsigned(bytes, &pos, 7);
+        uint32_t id = (uint32_t)read_LEB_unsigned(bytes, &pos, 7);
 
         // 紧跟在段 ID 后面的 4 个字节用于记录该段所占字节总长度
-        uint32_t slen = read_LEB_unsigned(bytes, &pos, 32);
+        uint32_t slen = (uint32_t)read_LEB_unsigned(bytes, &pos, 32);
 
         // 每次解析某个段的数据时，先将当前解析到的位置保存起来，以便后续使用
         uint32_t start_pos = pos;
@@ -329,7 +329,7 @@ struct Module *load_module(const uint8_t *bytes, const uint32_t byte_count) {
                 // type_sec: 0x01|byte_count|vec<func_type>
 
                 // 读取类型段中所有函数签名的数量
-                m->type_count = read_LEB_unsigned(bytes, &pos, 32);
+                m->type_count = (uint32_t)read_LEB_unsigned(bytes, &pos, 32);
 
                 // 为存储类型段中的函数签名申请内存
                 m->types = acalloc(m->type_count, sizeof(Type), "Module->types");
@@ -343,21 +343,21 @@ struct Module *load_module(const uint8_t *bytes, const uint32_t byte_count) {
                     read_LEB_unsigned(bytes, &pos, 7);
 
                     // 解析函数参数个数
-                    type->param_count = read_LEB_unsigned(bytes, &pos, 32);
+                    type->param_count = (uint32_t)read_LEB_unsigned(bytes, &pos, 32);
                     type->params = acalloc(type->param_count, sizeof(uint32_t),
                                            "type->params");
                     // 解析函数每个参数的类型
                     for (uint32_t p = 0; p < type->param_count; p++) {
-                        type->params[p] = read_LEB_unsigned(bytes, &pos, 32);
+                        type->params[p] = (uint32_t)read_LEB_unsigned(bytes, &pos, 32);
                     }
 
                     // 解析函数返回值个数
-                    type->result_count = read_LEB_unsigned(bytes, &pos, 32);
+                    type->result_count = (uint32_t)read_LEB_unsigned(bytes, &pos, 32);
                     type->results = acalloc(type->result_count, sizeof(uint32_t),
                                             "type->results");
                     // 解析函数每个返回值的类型
                     for (uint32_t r = 0; r < type->result_count; r++) {
-                        type->results[r] = read_LEB_unsigned(bytes, &pos, 32);
+                        type->results[r] = (uint32_t)read_LEB_unsigned(bytes, &pos, 32);
                     }
 
                     // 基于函数签名计算的唯一掩码值
@@ -376,7 +376,7 @@ struct Module *load_module(const uint8_t *bytes, const uint32_t byte_count) {
                 // import_desc: tag|[type_idx, table_type, mem_type, global_type]
 
                 // 读取导入项数量
-                uint32_t import_count = read_LEB_unsigned(bytes, &pos, 32);
+                uint32_t import_count = (uint32_t)read_LEB_unsigned(bytes, &pos, 32);
 
                 // 遍历所有导入项，解析对应数据
                 for (uint32_t idx = 0; idx < import_count; idx++) {
@@ -391,14 +391,14 @@ struct Module *load_module(const uint8_t *bytes, const uint32_t byte_count) {
                     // 读取导入项类型 tag（四种类型：函数、表、内存、全局变量）
                     uint32_t external_kind = bytes[pos++];
 
-                    uint32_t type_index, fidx;
-                    uint8_t global_type, mutability;
+                  uint32_t type_index = 0, fidx;
+                  uint8_t global_type = '\0', mutability;
 
                     // 根据不同的导入项类型，读取对应的内容
                     switch (external_kind) {
                         case KIND_FUNCTION:
                             // 读取函数签名索引 type_idx
-                            type_index = read_LEB_unsigned(bytes, &pos, 32);
+                            type_index = (uint32_t)read_LEB_unsigned(bytes, &pos, 32);
                             break;
                         case KIND_TABLE:
                             // 解析表段中的表 table_type（目前表段只会包含一张表）
@@ -562,7 +562,7 @@ struct Module *load_module(const uint8_t *bytes, const uint32_t byte_count) {
                     // f 为该函数在所有函数（包括导入函数）中的索引
                     m->functions[f].fidx = f;
                     // tidx 为该内部函数的函数签名在所有函数签名中的索引
-                    uint32_t tidx = read_LEB_unsigned(bytes, &pos, 32);
+                    uint32_t tidx = (uint32_t)read_LEB_unsigned(bytes, &pos, 32);
                     // 通过索引 tidx 从所有函数签名中获取到具体的函数签名，然后设置为该函数的函数签名
                     m->functions[f].type = &m->types[tidx];
                 }
@@ -581,7 +581,7 @@ struct Module *load_module(const uint8_t *bytes, const uint32_t byte_count) {
                 // limits: flags|min|(max)?
 
                 // 读取表的数量
-                uint32_t table_count = read_LEB_unsigned(bytes, &pos, 32);
+                uint32_t table_count = (uint32_t)read_LEB_unsigned(bytes, &pos, 32);
                 // 模块最多只能定义一张表，因此 table_count 必需为 1
                 ASSERT(table_count == 1, "More than 1 table not supported\n")
 
@@ -606,7 +606,7 @@ struct Module *load_module(const uint8_t *bytes, const uint32_t byte_count) {
                 // limits: flags|min|(max)?
 
                 // 读取内存的数量
-                uint32_t memory_count = read_LEB_unsigned(bytes, &pos, 32);
+                uint32_t memory_count = (uint32_t)read_LEB_unsigned(bytes, &pos, 32);
                 // 模块最多只能定义一块内存，因此 memory_count 必需为 1
                 ASSERT(memory_count == 1, "More than 1 memory not supported\n")
 
@@ -629,7 +629,7 @@ struct Module *load_module(const uint8_t *bytes, const uint32_t byte_count) {
                 // init_expr: (byte)+|0x0B
 
                 // 读取模块中全局变量的数量
-                uint32_t global_count = read_LEB_unsigned(bytes, &pos, 32);
+                uint32_t global_count = (uint32_t)read_LEB_unsigned(bytes, &pos, 32);
 
                 // 遍历全局段中的每一个全局变量项
                 for (uint32_t g = 0; g < global_count; g++) {
@@ -671,7 +671,7 @@ struct Module *load_module(const uint8_t *bytes, const uint32_t byte_count) {
                 // export_desc: tag|[func_idx, table_idx, mem_idx, global_idx]
 
                 // 读取导出项数量
-                uint32_t export_count = read_LEB_unsigned(bytes, &pos, 32);
+                uint32_t export_count = (uint32_t)read_LEB_unsigned(bytes, &pos, 32);
 
                 // 遍历所有导出项，解析对应数据
                 for (uint32_t e = 0; e < export_count; e++) {
@@ -682,7 +682,7 @@ struct Module *load_module(const uint8_t *bytes, const uint32_t byte_count) {
                     uint32_t external_kind = bytes[pos++];
 
                     // 读取导出项在相应段中的索引
-                    uint32_t index = read_LEB_unsigned(bytes, &pos, 32);
+                    uint32_t index = (uint32_t)read_LEB_unsigned(bytes, &pos, 32);
 
                     // 先保存当前导出项的索引
                     uint32_t eidx = m->export_count;
@@ -737,7 +737,7 @@ struct Module *load_module(const uint8_t *bytes, const uint32_t byte_count) {
 
                 // 起始段的编码格式如下：
                 // start_sec: 0x08|byte_count|func_idx
-                m->start_function = read_LEB_unsigned(bytes, &pos, 32);
+                m->start_function = (uint32_t)read_LEB_unsigned(bytes, &pos, 32);
                 break;
             }
             case ElemID: {
@@ -750,12 +750,12 @@ struct Module *load_module(const uint8_t *bytes, const uint32_t byte_count) {
                 // elem: table_idx|offset_expr|vec<func_id>
 
                 // 读取元素数量
-                uint32_t elem_count = read_LEB_unsigned(bytes, &pos, 32);
+                uint32_t elem_count = (uint32_t)read_LEB_unsigned(bytes, &pos, 32);
 
                 // 依次对表中每个元素进行初始化
                 for (uint32_t c = 0; c < elem_count; c++) {
                     // 读取表索引 table_idx（即初始化哪张表）
-                    uint32_t index = read_LEB_unsigned(bytes, &pos, 32);
+                    uint32_t index = (uint32_t)read_LEB_unsigned(bytes, &pos, 32);
                     // 目前 Wasm 版本规定一个模块只能定义一张表，所以 index 只能为 0
                     ASSERT(index == 0, "Only 1 default table in MVP\n")
 
@@ -767,10 +767,10 @@ struct Module *load_module(const uint8_t *bytes, const uint32_t byte_count) {
                     uint32_t offset = m->stack[m->sp--].value.uint32;
 
                     // 函数索引列表（即给定的元素初始化数据）
-                    uint32_t num_elem = read_LEB_unsigned(bytes, &pos, 32);
+                    uint32_t num_elem = (uint32_t)read_LEB_unsigned(bytes, &pos, 32);
                     // 遍历函数索引列表，将列表中的函数索引设置为元素的初始值
                     for (uint32_t n = 0; n < num_elem; n++) {
-                        m->table.entries[offset + n] = read_LEB_unsigned(bytes, &pos, 32);
+                        m->table.entries[offset + n] = (uint32_t)read_LEB_unsigned(bytes, &pos, 32);
                     }
                 }
                 pos = start_pos + slen;
@@ -787,7 +787,7 @@ struct Module *load_module(const uint8_t *bytes, const uint32_t byte_count) {
                 // locals: local_count|val_type
 
                 // 读取代码段中的代码项的数量
-                uint32_t code_count = read_LEB_unsigned(bytes, &pos, 32);
+                uint32_t code_count = (uint32_t)read_LEB_unsigned(bytes, &pos, 32);
 
                 // 声明局部变量的值类型
                 uint8_t val_type;
@@ -798,13 +798,13 @@ struct Module *load_module(const uint8_t *bytes, const uint32_t byte_count) {
                     Block *function = &m->functions[m->import_func_count + c];
 
                     // 读取代码项所占字节数（暂用 4 个字节）
-                    uint32_t code_size = read_LEB_unsigned(bytes, &pos, 32);
+                    uint32_t code_size = (uint32_t)read_LEB_unsigned(bytes, &pos, 32);
 
                     // 保存当前位置为代码项的起始位置（除去前面的表示代码项目长度的 4 字节）
                     uint32_t payload_start = pos;
 
                     // 读取 locals 数量（注：相同类型的局部变量算一个 locals）
-                    uint32_t local_count = read_LEB_unsigned(bytes, &pos, 32);
+                    uint32_t local_count = (uint32_t)read_LEB_unsigned(bytes, &pos, 32);
 
                     uint32_t save_pos, lidx, lecount;
 
@@ -818,7 +818,7 @@ struct Module *load_module(const uint8_t *bytes, const uint32_t byte_count) {
                     // 注：相同类型的局部变量算一个 locals
                     for (uint32_t l = 0; l < local_count; l++) {
                         // 读取单个 locals 所包含的变量数量
-                        lecount = read_LEB_unsigned(bytes, &pos, 32);
+                        lecount = (uint32_t)read_LEB_unsigned(bytes, &pos, 32);
 
                         // 累加 locals 所对应的局部变量的数量
                         function->local_count += lecount;
@@ -840,7 +840,7 @@ struct Module *load_module(const uint8_t *bytes, const uint32_t byte_count) {
                     // 第二次遍历所有的 locals，目的是所有的代码项中所有的局部变量设置值类型
                     for (uint32_t l = 0; l < local_count; l++) {
                         // 读取单个 locals 所包含的变量数量
-                        lecount = read_LEB_unsigned(bytes, &pos, 32);
+                        lecount = (uint32_t)read_LEB_unsigned(bytes, &pos, 32);
 
                         // 读取单个 locals 的值类型
                         val_type = read_LEB_unsigned(bytes, &pos, 7);
@@ -878,12 +878,12 @@ struct Module *load_module(const uint8_t *bytes, const uint32_t byte_count) {
                 // data: mem_idx|offset_expr|vec<byte>
 
                 // 读取数据数量
-                uint32_t mem_count = read_LEB_unsigned(bytes, &pos, 32);
+                uint32_t mem_count = (uint32_t)read_LEB_unsigned(bytes, &pos, 32);
 
                 // 依次对内存中每个部分进行初始化
                 for (uint32_t s = 0; s < mem_count; s++) {
                     // 读取内存索引 mem_idx（即初始化哪块内存）
-                    uint32_t index = read_LEB_unsigned(bytes, &pos, 32);
+                    uint32_t index = (uint32_t)read_LEB_unsigned(bytes, &pos, 32);
                     // 目前 Wasm 版本规定一个模块只能定义一块内存，所以 index 只能为 0
                     ASSERT(index == 0, "Only 1 default memory in MVP\n")
 
@@ -895,7 +895,7 @@ struct Module *load_module(const uint8_t *bytes, const uint32_t byte_count) {
                     uint32_t offset = m->stack[m->sp--].value.uint32;
 
                     // 读取初始化数据所占内存大小
-                    uint32_t size = read_LEB_unsigned(bytes, &pos, 32);
+                    uint32_t size = (uint32_t)read_LEB_unsigned(bytes, &pos, 32);
 
                     // 将写在二进制文件中的初始化数据拷贝到指定偏移量的内存中
                     memcpy(m->memory.bytes + offset, bytes + pos, size);

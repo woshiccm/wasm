@@ -147,10 +147,10 @@ bool interpret(Module *m) {
     uint8_t *maddr;                 // 实际内存地址指针
     uint32_t addr;                  // 用于计算相对内存地址
     uint32_t offset;                // 内存偏移量
-    uint32_t a, b, c;               // 用于 I32 数值计算
-    uint64_t d, e, f;               // 用于 I64 数值计算
-    float g, h, i;                  // 用于 F32 数值计算
-    double j, k, l;                 // 用于 F64 数值计算
+    uint32_t a, b, c = 0;               // 用于 I32 数值计算
+    uint64_t d, e, f = 0;               // 用于 I64 数值计算
+    float g, h, i = 0.0;                  // 用于 F32 数值计算
+    double j, k, l = 0.0;                 // 用于 F64 数值计算
 
     while (m->pc < m->byte_count) {
         opcode = bytes[m->pc];// 读取指令中的操作码
@@ -288,7 +288,7 @@ bool interpret(Module *m) {
                 // 另外该目标标签索引是相对的，例如为 0 表示该指令所在的控制块定义的跳转标签，
                 // 为 1 表示往外一层控制块定义的跳转标签，
                 // 为 2 表示再往外一层控制块定义的跳转标签，以此类推
-                depth = read_LEB_unsigned(bytes, &m->pc, 32);
+                depth = (uint32_t)read_LEB_unsigned(bytes, &m->pc, 32);
                 // 将目标控制块关联的栈帧设置为当前栈帧
                 m->csp -= (int) depth;
                 // 跳转到目标控制块的跳转地址继续执行后面的指令
@@ -301,7 +301,7 @@ bool interpret(Module *m) {
                 // 另外该目标标签索引是相对的，例如为 0 表示该指令所在的控制块定义的跳转标签，
                 // 为 1 表示往外一层控制块定义的跳转标签，
                 // 为 2 表示再往外一层控制块定义的跳转标签，以此类推
-                depth = read_LEB_unsigned(bytes, &m->pc, 32);
+                depth = (uint32_t)read_LEB_unsigned(bytes, &m->pc, 32);
                 // 将操作数栈顶值弹出，作为判断条件
                 cond = stack[m->sp--].value.uint32;
                 // 如果为真则跳转，否则不跳转
@@ -324,7 +324,7 @@ bool interpret(Module *m) {
                 // 否则跳转到默认索引指定的标签处
 
                 // 读取目标标签索引的数量，也就是索引表的大小
-                uint32_t count = read_LEB_unsigned(bytes, &m->pc, 32);
+                uint32_t count = (uint32_t)read_LEB_unsigned(bytes, &m->pc, 32);
 
                 // 如果索引表超出了规定的最大值，则记录异常信息并直接返回 false 退出虚拟机执行
                 if (count > BR_TABLE_SIZE) {
@@ -334,11 +334,11 @@ bool interpret(Module *m) {
 
                 // 构造索引表
                 for (uint32_t n = 0; n < count; n++) {
-                    m->br_table[n] = read_LEB_unsigned(bytes, &m->pc, 32);
+                    m->br_table[n] = (uint32_t)read_LEB_unsigned(bytes, &m->pc, 32);
                 }
 
                 // 读取默认索引
-                depth = read_LEB_unsigned(bytes, &m->pc, 32);
+                depth = (uint32_t)read_LEB_unsigned(bytes, &m->pc, 32);
 
                 // 从操作数栈顶弹出一个 i32 类型的值 m
                 int32_t didx = stack[m->sp--].value.int32;
@@ -374,7 +374,7 @@ bool interpret(Module *m) {
                 // 注：Call 指令要调用的函数是在编译期确定的，也就是说被调用函数的索引硬编码在 call 指令的立即数中
 
                 // 读取该指令的立即数，也就是被调用函数的索引（占 4 个字节）
-                fidx = read_LEB_unsigned(bytes, &m->pc, 32);
+                fidx = (uint32_t)read_LEB_unsigned(bytes, &m->pc, 32);
 
                 // 如果函数索引值小于 m->import_func_count，则说明该函数为外部函数
                 // 原因：在解析 Wasm 二进制文件内容时，首先解析导入段中的函数到 m->functions，然后再解析函数段中的函数到 m->functions
@@ -400,7 +400,7 @@ bool interpret(Module *m) {
                 // 具体调用哪个函数只有在运行期间根据操作数栈顶的值才能确定
 
                 // 第一个立即数表示被调用函数的类型索引（占 4 个字节）
-                uint32_t tidx = read_LEB_unsigned(bytes, &m->pc, 32);
+                uint32_t tidx = (uint32_t)read_LEB_unsigned(bytes, &m->pc, 32);
 
                 // 第二个立即数为保留立即数（占 1 个比特位）
                 read_LEB_unsigned(bytes, &m->pc, 1);
@@ -508,7 +508,7 @@ bool interpret(Module *m) {
                 // 指令作用：将指定局部变量压入到操作数栈顶
 
                 // 该指令的立即数为局部变量的索引
-                idx = read_LEB_unsigned(bytes, &m->pc, 32);
+                idx = (uint32_t)read_LEB_unsigned(bytes, &m->pc, 32);
 
                 // 将指定局部变量的值压入到操作数栈顶
                 stack[++m->sp] = stack[m->fp + idx];
@@ -517,7 +517,7 @@ bool interpret(Module *m) {
                 // 指令作用：将操作数栈顶的值弹出并保存到指定局部变量中
 
                 // 该指令的立即数为局部变量的索引
-                idx = read_LEB_unsigned(bytes, &m->pc, 32);
+                idx = (uint32_t)read_LEB_unsigned(bytes, &m->pc, 32);
 
                 // 弹出操作数栈顶的值，将其保存到指定局部变量中
                 stack[m->fp + idx] = stack[m->sp--];
@@ -526,7 +526,7 @@ bool interpret(Module *m) {
                 // 指令作用：将操作数栈顶值保存到指定局部变量中，但不弹出栈顶值
 
                 // 该指令的立即数为局部变量的索引
-                idx = read_LEB_unsigned(bytes, &m->pc, 32);
+                idx = (uint32_t)read_LEB_unsigned(bytes, &m->pc, 32);
 
                 // 弹出操作数栈顶的值，将其保存到指定局部变量中（注意：不弹出栈顶值）
                 stack[m->fp + idx] = stack[m->sp];
@@ -540,7 +540,7 @@ bool interpret(Module *m) {
                 // 指令作用：将指定全局变量压入到操作数栈顶
 
                 // 该指令的立即数为全局变量的索引
-                idx = read_LEB_unsigned(bytes, &m->pc, 32);
+                idx = (uint32_t)read_LEB_unsigned(bytes, &m->pc, 32);
 
                 // 将指定局部变量的值压入到操作数栈顶
                 stack[++m->sp] = m->globals[idx];
@@ -549,7 +549,7 @@ bool interpret(Module *m) {
                 // 指令作用：操作数栈顶的值弹出并保存到指定全局变量中
 
                 // 该指令的立即数为全局变量的索引
-                idx = read_LEB_unsigned(bytes, &m->pc, 32);
+                idx = (uint32_t)read_LEB_unsigned(bytes, &m->pc, 32);
 
                 // 弹出操作数栈顶的值，将其保存到指定全局变量中
                 m->globals[idx] = stack[m->sp--];
@@ -571,7 +571,7 @@ bool interpret(Module *m) {
                 // 第二个立即数表示内存偏移量
                 // 从操作数栈顶弹出一个 i32 类型的数，和内存偏移量 offset 相加，就可以得到实际内存相对地址
                 // 注：操作数栈顶弹出的数和内存偏移量都是 32 位无符号整数，所以 Wasm 实际拥有 33 比特的地址空间
-                offset = read_LEB_unsigned(bytes, &m->pc, 32);
+                offset =(uint32_t) read_LEB_unsigned(bytes, &m->pc, 32);
                 // 从操作数栈顶弹出一个 i32 类型的数（用于获取实际内存地址）
                 addr = stack[m->sp--].value.uint32;
 
@@ -687,7 +687,7 @@ bool interpret(Module *m) {
                 // 第二个立即数表示内存偏移量
                 // 从操作数栈顶弹出一个 i32 类型的数，和内存偏移量 offset 相加，就可以得到实际内存相对地址
                 // 注：操作数栈顶弹出的数和内存偏移量都是 32 位无符号整数，所以 Wasm 实际拥有 33 比特的地址空间
-                offset = read_LEB_unsigned(bytes, &m->pc, 32);
+                offset = (uint32_t)read_LEB_unsigned(bytes, &m->pc, 32);
 
                 // 获取操作数栈顶地址，并将栈顶弹出
                 StackValue *sval = &stack[m->sp--];
@@ -798,7 +798,7 @@ bool interpret(Module *m) {
                 // 指令作用：将指令的立即数以 i32 类型压入操作数栈顶
 
                 stack[++m->sp].value_type = I32;
-                stack[m->sp].value.uint32 = read_LEB_signed(bytes, &m->pc, 32);
+                stack[m->sp].value.uint32 = (uint32_t)read_LEB_signed(bytes, &m->pc, 32);
                 continue;
             case I64Const:
                 // 指令作用：将指令的立即数以 i64 类型压入操作数栈顶
